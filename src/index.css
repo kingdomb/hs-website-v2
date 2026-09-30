@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root { --header-h: 4.5rem; --rise: 24px; --slide: 32px; --pop-from: 0.5; --scale-from: 0.94; --blur-from: 14px; --page-rise: 14px; }
+  /* Gentle: entrances stay but every distance halves (continuous loops are stopped below). */
+  html[data-motion='gentle'] { --rise: 12px; --slide: 16px; --pop-from: 0.75; --scale-from: 0.97; --blur-from: 7px; --page-rise: 7px; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 1rem); }
+  body { @apply bg-neu font-sans text-neu-ink antialiased; }
+  h1, h2, h3 { @apply font-display; }
+  img { @apply max-w-full; }
+}
+
+@layer components {
+  .neu-raised { @apply rounded-neu bg-neu shadow-neu-lg; }
+  .neu-raised-sm { @apply rounded-neu bg-neu shadow-neu-sm; }
+  .neu-inset { @apply rounded-neu bg-neu shadow-neu-inset; }
+  .neu-press { transition: box-shadow 0.3s ease, transform 0.3s ease; }
+  .neu-press:hover { transform: translateY(-2px); }
+  .neu-press:active { transform: none; box-shadow: theme('boxShadow.neu-inset-sm'); }
+  /* the only clay in the system */
+  .clay-primary { color: #fff; background: linear-gradient(160deg, #4a68f0, #1f3bb0); box-shadow: theme('boxShadow.clay-royal'); }
+  .clay-primary:active { box-shadow: inset 6px 6px 12px rgba(20, 40, 150, 0.45), inset -4px -4px 10px rgba(134, 160, 255, 0.4); }
+  .clay-gold { color: #4a3300; background: linear-gradient(160deg, #ffe89c, #e4b84d); box-shadow: theme('boxShadow.clay-gold'); }
+  /* soft pointer spotlight (see hooks/usePointerGlow) */
+  .spotlight { position: relative; }
+  .spotlight::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 0.4s ease;
+    background: radial-gradient(340px circle at var(--gx, 50%) var(--gy, 50%), rgba(91, 123, 255, 0.10), transparent 62%);
+  }
+  .spotlight:hover::before { opacity: 1; }
+  .tilt { transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.4s ease; }
+  .tilt:hover { will-change: transform; }
+}
+
+/* Hover glide / lift for links and buttons that are not neu-press (fine pointers only; neutralised under motion off below). */
+@layer components {
+  .hover-glide, .hover-lift { transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  @media (hover: hover) and (pointer: fine) {
+    .hover-glide:hover { transform: translateX(6px); }
+    .hover-lift:hover { transform: translateY(-2px); }
+  }
+}
+
+/* Hide the scrollbar on swipe-only tracks (VerseCarousel). */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Scroll reveal family (components/ui/Reveal.jsx). Whole elements only, never letters or words. */
+.reveal { opacity: 0; transform: translateY(var(--rise)); transition: opacity 1s ease, transform 1s cubic-bezier(0.2, 0.7, 0.2, 1), filter 1.2s ease, clip-path 1.2s cubic-bezier(0.2, 0.7, 0.2, 1); transition-delay: var(--reveal-delay, 0ms); }
+.hero-layer { will-change: transform; backface-visibility: hidden; }
+.reveal:not([data-shown='true']) { will-change: opacity, transform; }
+.reveal[data-variant='scale'] { transform: scale(var(--scale-from)); }
+.reveal[data-variant='left'] { transform: translateX(calc(var(--slide) * -1)); }
+.reveal[data-variant='right'] { transform: translateX(var(--slide)); }
+.reveal[data-variant='blur'] { filter: blur(var(--blur-from)); transform: translateY(calc(var(--rise) * 0.4)); }
+.reveal[data-variant='pop'] { transform: scale(var(--pop-from)); transition: opacity 0.5s ease, transform 0.8s cubic-bezier(0.34, 1.7, 0.5, 1); transition-delay: var(--reveal-delay, 0ms); }
+.reveal[data-variant='mask'] { clip-path: inset(9% round 30px); transform: scale(1.05); }
+.reveal[data-shown='true'] { opacity: 1; transform: none; filter: none; clip-path: none; }
+.reveal[data-variant='mask'][data-shown='true'] { clip-path: inset(-64px round 30px); }
+
+/* Motion off (OS reduce-motion, ?motion=off, or the future accessibility menu): nothing moves. */
+html[data-motion='off'] .scroll-progress { display: none; }
+html[data-motion='off'] .neu-press:hover, html[data-motion='off'] .hover-glide:hover, html[data-motion='off'] .hover-lift:hover { transform: none; }
+html[data-motion='off'] .header-pill[data-scrolled='true'] { transform: none; }
+html[data-motion='off'] .reveal { opacity: 1; transform: none; filter: none; clip-path: none; }
+html[data-motion='off'] *, html[data-motion='off'] *::before, html[data-motion='off'] *::after {
+  animation: none !important; transition: none !important; scroll-behavior: auto !important;
+}
+/* Gentle: entrances stay, continuous loops stop. */
+html[data-motion='gentle'] .animate-float, html[data-motion='gentle'] .animate-breathe,
+html[data-motion='gentle'] .animate-drift, html[data-motion='gentle'] .animate-kenburns { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion]) *, html:not([data-motion]) *::before, html:not([data-motion]) *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  html:not([data-motion]) .reveal { opacity: 1; transform: none; filter: none; clip-path: none; }
+}
